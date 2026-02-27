@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ -z "$1" ]; then
-    echo "Usage: ./scripts/init.sh <project_path>"
+FORCE=false
+if [ "${1:-}" = "--force" ]; then
+    FORCE=true
+    shift
+fi
+
+if [ -z "${1:-}" ]; then
+    echo "Usage: ./scripts/init.sh [--force] <project_path>"
     exit 1
 fi
 
@@ -14,6 +20,21 @@ ABS_PATH=$(pwd)
 PROJ_NAME=$(basename "$ABS_PATH")
 # Ensure the package name uses underscores
 PKG_NAME=$(echo "$PROJ_NAME" | tr '-' '_')
+
+# Safety check: warn if project already exists
+if [ "$FORCE" = false ] && [ -f "pyproject.toml" ]; then
+    echo ""
+    echo "⚠️  WARNING: An existing project was detected in this directory."
+    echo "   This will DELETE and recreate: src/, tests/, pyproject.toml,"
+    echo "   .venv/, .gitignore, LICENSE, CHANGELOG.md, AGENTS.md, and more."
+    echo ""
+    read -rp "   Are you sure you want to re-initialize? (y/N): " confirm
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+        echo "❌ Aborted. No changes were made."
+        exit 0
+    fi
+    echo ""
+fi
 
 echo "🛠️  Scaffolding: $PROJ_NAME (Package: $PKG_NAME)"
 

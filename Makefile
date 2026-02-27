@@ -14,7 +14,7 @@ help: ## Show this help message
 
 init: ## Completely re-initialize the project structure and environment
 	@echo "🚀 Initializing project..."
-	./$(SCRIPTS_DIR)/init.sh .
+	@./$(SCRIPTS_DIR)/init.sh .
 	@echo "✅ Bootstrap complete. You are ready to code."
 
 install: ## Setup virtualenv and install dependencies
