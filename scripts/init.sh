@@ -95,19 +95,24 @@ make check
 # Auto-fix linting issues
 make fix
 
-# Run tests
+# Run tests with coverage
 make test
+
+# Remove build artifacts and caches
+make clean
 \`\`\`
 
 ## Project Structure
 
-\`\`\`
+\`\`\`text
 $PROJ_NAME/
 ├── src/
-│   └── $PKG_NAME/       # Main package
-├── tests/                # Test files
-├── pyproject.toml        # Project configuration
-└── Makefile             # Development commands
+│   └── $PKG_NAME/        # Main package
+├── tests/                 # Test files
+├── .github/workflows/     # CI pipeline
+├── pyproject.toml         # Project configuration
+├── Makefile               # Development commands
+└── AGENTS.md              # AI agent instructions
 \`\`\`
 
 ## License
