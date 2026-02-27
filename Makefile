@@ -44,5 +44,7 @@ clean: ## Remove build artifacts and caches
 	rm -rf .ruff_cache/
 	rm -rf .pytest_cache/
 	rm -rf .mypy_cache/
+	rm -rf .coverage
+	rm -rf htmlcov/
 	rm -rf dist/
 	find . -type d -name "__pycache__" -exec rm -rf {} +

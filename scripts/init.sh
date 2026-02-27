@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
 if [ -z "$1" ]; then
     echo "Usage: ./scripts/init.sh <project_path>"
@@ -17,7 +18,7 @@ PKG_NAME=$(echo "$PROJ_NAME" | tr '-' '_')
 echo "🛠️  Scaffolding: $PROJ_NAME (Package: $PKG_NAME)"
 
 # 1. Nuclear Clean
-rm -rf .venv uv.lock pyproject.toml src tests .vscode .gitignore LICENSE .python-version CHANGELOG.md
+rm -rf .venv uv.lock pyproject.toml src tests .vscode .gitignore LICENSE .python-version CHANGELOG.md .editorconfig
 mkdir -p "src/$PKG_NAME" "tests" ".vscode"
 
 # 2. Create Source Files
@@ -44,6 +45,7 @@ if __name__ == "__main__":
 EOF
 
 # 3. Create Test Files
+touch "tests/__init__.py"
 cat <<EOF > "tests/test_main.py"
 """Tests for the main module."""
 
@@ -129,10 +131,10 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "pytest>=9.0.0",
-    "pytest-cov>=6.0.0",
-    "ruff>=0.3.0",
-    "mypy>=1.8.0",
+    "pytest>=9.0.0,<10",
+    "pytest-cov>=6.0.0,<7",
+    "ruff>=0.3.0,<1",
+    "mypy>=1.8.0,<2",
 ]
 
 [build-system]
@@ -150,7 +152,7 @@ line-length = 88
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "UP", "B", "C4", "SIM"]
+select = ["E", "F", "I", "N", "UP", "B", "C4", "SIM", "RUF", "PT", "TCH", "ANN"]
 ignore = []
 
 [tool.ruff.lint.isort]
@@ -166,7 +168,7 @@ disallow_untyped_defs = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = "--cov=src --cov-report=term-missing --cov-report=html"
+addopts = "-v --cov=src --cov-report=term-missing --cov-report=html"
 
 [tool.coverage.run]
 source = ["src"]
@@ -187,7 +189,7 @@ EOF
 uv sync --reinstall-package "$PROJ_NAME"
 
 # 7. Create .gitignore
-cat <<EOF > .gitignore
+cat <<'GITIGNORE' > .gitignore
 # Python
 __pycache__/
 *.py[cod]
@@ -248,7 +250,7 @@ uv.lock
 # Distribution
 *.whl
 *.tar.gz
-EOF
+GITIGNORE
 
 # 8. Create MIT LICENSE
 YEAR=$(date +%Y)
@@ -305,7 +307,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 EOF
 
 # 11. Support Artifacts
-# 11. Support Artifacts
 cat <<EOF > AGENTS.md
 # Agent Instructions
 
@@ -352,6 +353,50 @@ cat <<EOF > .vscode/settings.json
 }
 EOF
 
+# 12. Create .editorconfig for cross-editor consistency
+cat <<EOF > .editorconfig
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.md]
+trim_trailing_whitespace = false
+
+[Makefile]
+indent_style = tab
+EOF
+
+# 13. Create GitHub Actions CI workflow
+mkdir -p .github/workflows
+cat <<EOF > .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+      - run: uv python install 3.12
+      - run: uv sync
+      - run: make check
+      - run: make test
+EOF
+
 echo "------------------------------------------------"
 echo "✅ Scaffolding complete."
 echo "🚀 Run: uv run start"
@@ -362,8 +407,10 @@ echo "   - pyproject.toml (with enhanced config)"
 echo "   - README.md"
 echo "   - LICENSE (MIT)"
 echo "   - .gitignore"
+echo "   - .editorconfig"
 echo "   - .python-version"
 echo "   - CHANGELOG.md"
 echo "   - AGENTS.md"
 echo "   - .vscode/settings.json"
+echo "   - .github/workflows/ci.yml"
 
